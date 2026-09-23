@@ -3,6 +3,7 @@ import crypto from "node:crypto";
 import { db } from "./index";
 import * as s from "./schema";
 import { hashPw } from "@/lib/auth";
+import { ensureSchema } from "./bootstrap";
 
 let seeding: Promise<void> | null = null;
 
@@ -189,6 +190,7 @@ const MATCHES: [id: string, peer: string, score: number, reason: string][] = [
 ];
 
 async function run() {
+  await ensureSchema();
   const [{ value }] = await db.select({ value: count() }).from(s.users);
   if (value > 0) return;
 
