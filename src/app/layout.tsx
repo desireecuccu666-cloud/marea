@@ -18,6 +18,9 @@ export const metadata: Metadata = {
   title: "Marea — la community internazionale",
   description:
     "Chat, stanze, match per interessi e marketplace. Nickname pubblico, identità verificata privatamente. Solo 18+.",
+  other: {
+    "google-site-verification": "PN4Ze91IciIBDibpPqZNKXMOwxIPpLdM9NqfVRBC2RM",
+  },
 };
 
 export const viewport: Viewport = {
