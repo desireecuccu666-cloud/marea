@@ -1,7 +1,19 @@
 # Marea — guida per alle prime armi (pubblicazione online)
 
-Segui i numeri in ordine. Ogni passo dice esattamente cosa fare. Tempo totale: ~40 minuti.
-**Costo iniziale: 0€.**
+## ⚡ QUICK START — le 6 cose da fare (10-15 minuti)
+
+Il progetto è già un repository git pronto (commit fatto). Non devi scrivere una riga di codice.
+
+1. **GitHub** (github.com) → account → **+ → New repository** → `marea` → Create
+2. **Neon** (neon.tech) → "Create new database" → Frankfurt → Free → copia la connection string
+3. **Vercel** (vercel.com) → "Add New → Project" → importa `marea` da GitHub
+4. In Vercel, sezione **Environment Variables** → `DATABASE_URL` = stringa di Neon → **Deploy**
+5. Aspetta 2-3 min → **sei online** 🔥
+6. Quando vuoi i soldi: **stripe.com** → aggiungi il tuo **IBAN** nel conto → API key →
+   `STRIPE_SECRET_KEY` in Vercel → Redeploy
+
+I dettagli completi, i comandi esatti e la risoluzione dei problemi sono qui sotto.
+Tempo totale: ~40 minuti. **Costo iniziale: 0€. I soldi: i tuoi, sul tuo IBAN.**
 
 ---
 
