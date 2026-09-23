@@ -19,6 +19,7 @@ export const users = pgTable("users", {
   points: integer("points").notNull().default(0),
   walletCents: integer("wallet_cents").notNull().default(0),
   trialEndsAt: timestamp("trial_ends_at", { withTimezone: true }),
+  stripeSession: text("stripe_session"),
   bio: text("bio").notNull().default(""),
   hue: integer("hue").notNull().default(174),
   interests: text("interests").array().notNull().default([]),

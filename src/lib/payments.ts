@@ -25,10 +25,13 @@ export async function createCheckoutSession(opts: {
   kind: string;
   targetId?: string;
   label: string;
-}): Promise<{ url: string | null }> {
+  origin: string;
+}): Promise<{ url: string | null; id: string | null }> {
   const st = getStripe();
-  if (!st) return { url: null };
-  const origin = process.env.NEXT_PUBLIC_APP_URL ?? "http://localhost:3000";
+  if (!st) return { url: null, id: null };
+  // Il ritorno post-pagamento va SEMPRE al sito dove l'utente si trova
+  // (il suo dominio vero), con override opzionale via variabile d'ambiente.
+  const origin = process.env.NEXT_PUBLIC_APP_URL ?? opts.origin ?? "http://localhost:3000";
   const session = await st.checkout.sessions.create({
     mode: "payment",
     line_items: [
@@ -50,7 +53,20 @@ export async function createCheckoutSession(opts: {
     success_url: `${origin}/app?paid=1&session={CHECKOUT_SESSION_ID}`,
     cancel_url: `${origin}/app?cancelled=1`,
   });
-  return { url: session.url };
+  return { url: session.url, id: session.id };
+}
+
+/**
+ * Atomic claim of a checkout session: the first caller (redirect confirm OR
+ * app-start scan) wins; the session is then forgotten. Prevents double-credits.
+ */
+export async function claimSession(userId: string, sessionId: string): Promise<boolean> {
+  const res = await db
+    .update(s.users)
+    .set({ stripeSession: null })
+    .where(and(eq(s.users.id, userId), eq(s.users.stripeSession, sessionId)))
+    .returning({ id: s.users.id });
+  return res.length > 0;
 }
 
 export async function confirmSession(sessionId: string): Promise<{ paid: boolean; metadata: { kind: string; targetId: string; amountCents: number } } | null> {

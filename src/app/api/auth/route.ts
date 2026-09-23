@@ -11,13 +11,43 @@ import { botReply } from "@/lib/bots";
 
 export const dynamic = "force-dynamic";
 
+const APP_VERSION = 3;
+
 export async function GET() {
   await ensureSeed();
   const u = await getSessionUser();
   if (!u) return jerr("nope", 401);
+
+  // rete di sicurezza pagamenti: se una sessione Stripe è in attesa e ora è
+  // risultata pagata, la registriamo qui (funziona anche se il redirect salta)
+  let pendingPayment = false;
+  let fresh = u;
+  if (u.stripeSession) {
+    try {
+      const { confirmSession, claimSession, recordPurchase } = await import("@/lib/payments");
+      const res = await confirmSession(u.stripeSession);
+      if (res?.paid && res.metadata.kind) {
+        if (await claimSession(u.id, u.stripeSession)) {
+          await recordPurchase(u.id, res.metadata.kind, res.metadata.amountCents, res.metadata.targetId || undefined);
+          pendingPayment = true;
+          const rows = await db.select().from(s.users).where(eq(s.users.id, u.id)).limit(1);
+          fresh = rows[0] ?? u;
+        }
+      } else if (res && !res.paid) {
+        // non ancora pagata: la teniamo in attesa per il prossimo accesso
+      } else {
+        await db.update(s.users).set({ stripeSession: null }).where(eq(s.users.id, u.id));
+      }
+    } catch {
+      await db.update(s.users).set({ stripeSession: null }).where(eq(s.users.id, u.id)).catch(() => {});
+    }
+  }
+
   return NextResponse.json({
-    user: toPublic(u),
-    verifyCode: !u.verified && u.verifyExp && u.verifyExp.getTime() > Date.now() ? u.verifyCode : null,
+    user: toPublic(fresh),
+    verifyCode: !fresh.verified && fresh.verifyExp && fresh.verifyExp.getTime() > Date.now() ? fresh.verifyCode : null,
+    pendingPayment,
+    appVersion: APP_VERSION,
   });
 }
 

@@ -65,6 +65,12 @@ export default function AppShell() {
         const d = await api("/api/auth");
         setUser(d.user);
         setVerifyCode(d.verifyCode);
+        if (d.pendingPayment) {
+          toast("Pagamento ricevuto ✓");
+          playSfx("cash");
+          const d2 = await api("/api/auth");
+          setUser(d2.user);
+        }
       } catch {
         router.replace("/");
       }
