@@ -3,6 +3,7 @@ import { useCallback, useEffect, useState } from "react";
 import { t as tFn } from "@/lib/i18n";
 import { api } from "@/lib/api";
 import { Avatar, Btn, Chip, Modal, Stars, toast, timeAgo, fmtMoney, Empty } from "@/components/ui";
+import Checkout from "@/components/Checkout";
 import {
   IcStore,
   IcSparkle,
@@ -26,8 +27,7 @@ export default function MarketView({ me, lang }: { me: PublicUser; lang: string 
   const [cat, setCat] = useState("all");
   const [q, setQ] = useState("");
   const [sel, setSel] = useState<any | null>(null);
-  const [pay, setPay] = useState<"form" | "processing" | "done" | null>(null);
-  const [card, setCard] = useState({ num: "", exp: "", cvc: "" });
+  const [buyItem, setBuyItem] = useState<any | null>(null);
   const [createOpen, setCreateOpen] = useState(false);
   const [cf, setCf] = useState({ title: "", category: "digital", price: "9.90", description: "", promoted: false });
   const [rv, setRv] = useState({ rating: 5, comment: "" });
@@ -51,28 +51,7 @@ export default function MarketView({ me, lang }: { me: PublicUser; lang: string 
   }, [cat, q]);
 
   const openBuy = (i: any) => {
-    setSel(i);
-    setPay("form");
-    setCard({ num: "", exp: "", cvc: "" });
-  };
-
-  const doPay = async () => {
-    if (!sel) return;
-    setPay("processing");
-    await new Promise((r) => setTimeout(r, 900));
-    try {
-      await api("/api/market", { action: "buy", productId: sel.id });
-      setPay("done");
-      setTimeout(() => {
-        setPay(null);
-        setSel(null);
-        load();
-        toast(t("market.done"));
-      }, 1500);
-    } catch {
-      setPay("form");
-      toast(t("err.generic"), "err");
-    }
+    setBuyItem(i);
   };
 
   const saveReview = async () => {
@@ -213,7 +192,7 @@ export default function MarketView({ me, lang }: { me: PublicUser; lang: string 
       </div>
 
       {/* detail modal */}
-      <Modal open={!!sel && !pay} onClose={() => setSel(null)} title={sel?.title} wide>
+      <Modal open={!!sel && !buyItem} onClose={() => setSel(null)} title={sel?.title} wide>
         {sel && (
           <div className="space-y-4">
             <div
@@ -244,7 +223,7 @@ export default function MarketView({ me, lang }: { me: PublicUser; lang: string 
                 <IcTrash className="h-3.5 w-3.5" /> {t("market.delete")}
               </Btn>
             ) : (
-              !pay && (
+              !buyItem && (
                 <div className="flex flex-wrap gap-2">
                   <Btn onClick={() => openBuy(sel)}>
                     <IcCard className="h-4 w-4" /> {t("market.buy")} · {fmtMoney(sel.priceCents)}
@@ -304,72 +283,23 @@ export default function MarketView({ me, lang }: { me: PublicUser; lang: string 
         )}
       </Modal>
 
-      {/* payment modal */}
-      <Modal open={!!pay} onClose={pay === "form" ? () => setPay(null) : () => {}} title={t("market.pay")}>
-        {pay === "form" && (
-          <div className="space-y-3">
-            <div className="flex items-center justify-between rounded-lg border border-line bg-ink-950 px-3.5 py-2.5">
-              <span className="text-xs text-mist">{sel?.title}</span>
-              <span className="font-display text-sm font-extrabold">{fmtMoney(sel?.priceCents ?? 0)}</span>
-            </div>
-            <p className="text-[11px] leading-relaxed text-mist-2">{t("market.paySub")}</p>
-            <div>
-              <label className="mb-1 block text-[11px] font-semibold text-mist">{t("pr.card")}</label>
-              <input
-                className="field font-mono tracking-wider"
-                placeholder="4242 4242 4242 4242"
-                value={card.num}
-                maxLength={19}
-                onChange={(e) =>
-                  setCard({
-                    ...card,
-                    num: e.target.value.replace(/\D/g, "").slice(0, 16).replace(/(\d{4})(?=\d)/g, "$1 "),
-                  })
-                }
-              />
-            </div>
-            <div className="grid grid-cols-2 gap-3">
-              <div>
-                <label className="mb-1 block text-[11px] font-semibold text-mist">{t("pr.exp")}</label>
-                <input
-                  className="field font-mono"
-                  placeholder="12/27"
-                  value={card.exp}
-                  maxLength={5}
-                  onChange={(e) => {
-                    const v = e.target.value.replace(/\D/g, "").slice(0, 4);
-                    setCard({ ...card, exp: v.length > 2 ? v.slice(0, 2) + "/" + v.slice(2) : v });
-                  }}
-                />
-              </div>
-              <div>
-                <label className="mb-1 block text-[11px] font-semibold text-mist">{t("pr.cvc")}</label>
-                <input className="field font-mono" placeholder="123" value={card.cvc} maxLength={4} onChange={(e) => setCard({ ...card, cvc: e.target.value.replace(/\D/g, "") })} />
-              </div>
-            </div>
-            <p className="flex items-center gap-1.5 text-[11px] text-mist-2">
-              <IcShield className="h-3.5 w-3.5 text-tide-500" /> {t("market.fee")}
-            </p>
-            <Btn className="w-full" disabled={card.num.replace(/\s/g, "").length < 12 || card.exp.length < 5 || card.cvc.length < 3} onClick={doPay}>
-              <IcCard className="h-4 w-4" /> {t("market.pay")} · {fmtMoney(sel?.priceCents ?? 0)}
-            </Btn>
-          </div>
-        )}
-        {pay === "processing" && (
-          <div className="flex flex-col items-center gap-4 py-8">
-            <div className="wave-load h-2 w-48 rounded-full bg-ink-700" />
-            <p className="text-xs text-mist-2">{t("c.loading")}</p>
-          </div>
-        )}
-        {pay === "done" && (
-          <div className="flex flex-col items-center gap-3 py-8">
-            <span className="anim-pop grid h-14 w-14 place-items-center rounded-full bg-tide-500/20 text-tide-300">
-              <IcCheck className="h-7 w-7" />
-            </span>
-            <p className="font-display text-sm font-bold">{t("market.done")}</p>
-          </div>
-        )}
-      </Modal>
+      {/* checkout reale (Stripe) o simulato, come gli altri acquisti */}
+      <Checkout
+        open={!!buyItem}
+        onClose={() => setBuyItem(null)}
+        title={buyItem?.title ?? ""}
+        amountCents={buyItem?.priceCents ?? 0}
+        sub={t("market.fee")}
+        payLabel={t("market.pay")}
+        payKind="market"
+        payTargetId={buyItem?.id}
+        onDone={async () => {
+          await api("/api/market", { action: "buy", productId: buyItem!.id });
+          toast(t("market.done"));
+          setSel(null);
+          load();
+        }}
+      />
 
       {/* create modal */}
       <Modal open={createOpen} onClose={() => setCreateOpen(false)} title={t("market.create")}>

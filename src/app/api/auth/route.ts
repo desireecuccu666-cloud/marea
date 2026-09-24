@@ -11,7 +11,7 @@ import { botReply } from "@/lib/bots";
 
 export const dynamic = "force-dynamic";
 
-const APP_VERSION = 3;
+const APP_VERSION = 4;
 
 export async function GET() {
   await ensureSeed();

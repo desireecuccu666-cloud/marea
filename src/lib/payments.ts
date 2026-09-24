@@ -1,6 +1,6 @@
 import Stripe from "stripe";
 import crypto from "node:crypto";
-import { eq, gt, and } from "drizzle-orm";
+import { eq, gt, and, sql } from "drizzle-orm";
 import { db } from "@/db";
 import * as s from "@/db/schema";
 import { addPoints } from "./points";
@@ -118,6 +118,21 @@ export async function recordPurchase(userId: string, kind: string, amountCents: 
   if (kind === "plus") {
     await db.update(s.users).set({ plus: true, plusRenewsAt: new Date(Date.now() + 30 * 864e5) }).where(eq(s.users.id, userId));
   }
+
+  if (kind === "market" && targetId) {
+    const [p] = await db.select().from(s.products).where(eq(s.products.id, targetId)).limit(1);
+    if (p) {
+      await db.insert(s.orders).values({
+        id: crypto.randomUUID(),
+        productId: p.id,
+        buyerId: userId,
+        amountCents,
+        feeCents: Math.round(amountCents * 0.1),
+      });
+      await db.update(s.products).set({ sold: sql`${s.products.sold} + 1` }).where(eq(s.products.id, p.id));
+    }
+  }
+
   // 'premium' needs nothing extra: the transaction row IS the 24h ticket
 }
 
