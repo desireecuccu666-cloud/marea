@@ -1,4 +1,4 @@
-import { and, eq } from "drizzle-orm";
+import { and, eq, like } from "drizzle-orm";
 import crypto from "node:crypto";
 import { db } from "@/db";
 import * as s from "@/db/schema";
@@ -48,10 +48,20 @@ async function tick() {
     );
     if (rooms.length) {
       const room = rooms[Math.floor(Math.random() * rooms.length)];
+      // SOLO i personaggi iniziali (id "u-..."): il motore NON deve mai
+      // scrivere con il nome di utenti reali — altrimenti non si distingue
+      // più chi scrive davvero
       const personas = await db
         .select()
         .from(s.users)
-        .where(and(eq(s.users.banned, false), eq(s.users.isBot, false), eq(s.users.ageGroup, room.group)));
+        .where(
+          and(
+            eq(s.users.banned, false),
+            eq(s.users.isBot, false),
+            eq(s.users.ageGroup, room.group),
+            like(s.users.id, "u-%")
+          )
+        );
       const p = personas[Math.floor(Math.random() * personas.length)];
       if (p) {
         emit(roomTarget(room.slug), "typing", { nickname: p.nickname });

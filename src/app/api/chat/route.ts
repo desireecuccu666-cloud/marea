@@ -8,7 +8,6 @@ import { jerr, needUser } from "@/lib/server";
 import { moderate } from "@/lib/moderation";
 import { botForRoom, botReply, AUTO_REPLY_CHANCE } from "@/lib/bots";
 import { emit, roomTarget } from "@/lib/liveBus";
-import { ensureLiveEngine } from "@/lib/liveEngine";
 import { isUnlimited, addPoints, FREE_LIMITS } from "@/lib/points";
 
 export const dynamic = "force-dynamic";
@@ -16,7 +15,6 @@ export const dynamic = "force-dynamic";
 export async function GET(req: Request) {
   const u = await needUser();
   if (!u) return jerr("nope", 401);
-  ensureLiveEngine();
   const url = new URL(req.url);
   const slug = url.searchParams.get("room");
 
