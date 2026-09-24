@@ -14,10 +14,29 @@ const inst = Instrument_Sans({
   display: "swap",
 });
 
+const SITE = "https://marea-seven-phi.vercel.app";
+
 export const metadata: Metadata = {
   title: "Marea — la community internazionale",
   description:
-    "Chat, stanze, match per interessi e marketplace. Nickname pubblico, identità verificata privatamente. Solo 18+.",
+    "Chat in tempo reale, stanze, match per interessi, sfoghi e marketplace. Spazi separati per età, identità verificata in privato, nickname pubblico.",
+  icons: { icon: "/favicon.svg" },
+  openGraph: {
+    title: "Marea — la community internazionale",
+    description:
+      "Chat live, stanze, match per interessi, sfoghi e marketplace. Spazi separati per età (13-17 / 18+), identità verificata in privato.",
+    type: "website",
+    locale: "it_IT",
+    siteName: "Marea",
+    url: SITE,
+    images: [{ url: "/og-marea.jpg", width: 1200, height: 630, alt: "Marea — la community internazionale" }],
+  },
+  twitter: {
+    card: "summary_large_image",
+    title: "Marea — la community internazionale",
+    description: "Chat live, stanze, match e marketplace. Spazi separati per età, identità in privato.",
+    images: ["/og-marea.jpg"],
+  },
   other: {
     "google-site-verification": "PN4Ze91IciIBDibpPqZNKXMOwxIPpLdM9NqfVRBC2RM",
   },

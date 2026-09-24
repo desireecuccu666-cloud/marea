@@ -1,0 +1,5 @@
+User-agent: *
+Allow: /
+Disallow: /api/
+
+Sitemap: https://marea-seven-phi.vercel.app/sitemap.xml
