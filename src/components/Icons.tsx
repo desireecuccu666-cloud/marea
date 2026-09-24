@@ -258,3 +258,8 @@ export const IcMute = (p: P) => (
     <path d="m16 9.5 5 5M21 9.5l-5 5" />
   </S>
 );
+export const IcStats = (p: P) => (
+  <S {...p}>
+    <path d="M4 20V10M9.5 20V4M15 20v-8M20.5 20V7" />
+  </S>
+);

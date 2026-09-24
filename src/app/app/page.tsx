@@ -21,6 +21,7 @@ import {
   IcTrophy,
   IcSound,
   IcMute,
+  IcStats,
 } from "@/components/Icons";
 import {
   restoreSoundPreference,
@@ -36,8 +37,9 @@ import MarketView from "@/views/MarketView";
 import ProfileView from "@/views/ProfileView";
 import SafetyView from "@/views/SafetyView";
 import LeaderboardView from "@/views/LeaderboardView";
+import OwnerView from "@/views/OwnerView";
 
-type View = "chat" | "dms" | "match" | "lb" | "market" | "profile" | "safety";
+type View = "chat" | "dms" | "match" | "lb" | "market" | "profile" | "safety" | "stats";
 
 export default function AppShell() {
   const router = useRouter();
@@ -53,6 +55,7 @@ export default function AppShell() {
   const [toasts, setToasts] = useState<{ id: number; msg: string; kind: "ok" | "err" }[]>([]);
   const [onlineTotal, setOnlineTotal] = useState(112);
   const [soundOn, setSoundOn] = useState(false);
+  const [isAdmin, setIsAdmin] = useState(false);
   const dq = useDebounced(q, 300);
 
   const lang: Lang = ((user?.language ?? "it") as Lang) || "it";
@@ -71,6 +74,9 @@ export default function AppShell() {
           const d2 = await api("/api/auth");
           setUser(d2.user);
         }
+        api("/api/admin")
+          .then(() => setIsAdmin(true))
+          .catch(() => {});
       } catch {
         router.replace("/");
       }
@@ -213,6 +219,7 @@ export default function AppShell() {
     { id: "profile", icon: IcUsers, label: t("nav.profile") },
     { id: "safety", icon: IcShield, label: t("nav.safety") },
   ];
+  if (isAdmin) NAV.push({ id: "stats", icon: IcStats, label: t("nav.stats") });
   const current = NAV.find((n) => n.id === view);
 
   const tickerItems = [
@@ -433,6 +440,7 @@ export default function AppShell() {
           {view === "market" && <MarketView me={user} lang={lang} />}
           {view === "profile" && <ProfileView me={user} verifyCode={verifyCode} lang={lang} setMe={setUser} />}
           {view === "safety" && <SafetyView me={user} lang={lang} />}
+          {view === "stats" && isAdmin && <OwnerView me={user} lang={lang} />}
         </main>
       </div>
 
